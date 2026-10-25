@@ -76,3 +76,5 @@ npm run build:site  # bundles the dev web UI into site/
 ## Dev site
 
 `web/` holds a minimal static page that runs the engine in the browser. `.github/workflows/pages.yml` typechecks, tests and builds it on every PR, and deploys it to GitHub Pages on each push to `main` (or a manual run). Pages must be enabled once under Settings → Pages → Source: GitHub Actions.
+
+"Find breweries near me" uses the browser's location, [Open Brewery DB](https://www.openbrewerydb.org/) for nearby breweries, and the [FOSSGIS OSRM](https://routing.openstreetmap.de/) bike router for distance (`web/venues.ts`). Both are free and need no key. If routing fails, the distance falls back to straight-line × 1.3 and the page says so. The FOSSGIS router is a shared community server with a fair-use policy, so production traffic should move to a hosted router such as Mapbox Directions.

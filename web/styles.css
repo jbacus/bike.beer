@@ -64,3 +64,15 @@ input, select {
 dt { font-size: 0.8rem; color: var(--muted); }
 dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 footer { font-size: 0.8rem; margin-top: 24px; }
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #1f1b16;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:disabled, select:disabled { opacity: 0.6; cursor: default; }
+footer a { color: inherit; }

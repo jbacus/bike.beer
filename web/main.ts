@@ -1,4 +1,5 @@
 import { carbGramsPerOz, planBurn, TripMode } from '../src';
+import { bikeRouteMiles, LatLon, nearbyBreweries, Venue } from './venues';
 
 declare const __BUILD_INFO__: string;
 
@@ -45,6 +46,67 @@ function render(): void {
   }
 }
 
+const nearMe = document.getElementById('nearMe') as HTMLButtonElement;
+const venueSelect = document.getElementById('venue') as HTMLSelectElement;
+const venueStatus = document.getElementById('venueStatus') as HTMLElement;
+const distanceInput = form.elements.namedItem('directMiles') as HTMLInputElement;
+
+let origin: LatLon | null = null;
+let venues: Venue[] = [];
+let routeRequest = 0;
+
+function currentPosition(): Promise<LatLon> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('This browser has no location access.'));
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      err => reject(new Error(err.code === err.PERMISSION_DENIED ? 'Location permission was denied.' : 'Could not get your location.')),
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
+    );
+  });
+}
+
+async function findNearby(): Promise<void> {
+  nearMe.disabled = true;
+  venueStatus.textContent = 'Finding your location…';
+  try {
+    origin = await currentPosition();
+    venueStatus.textContent = 'Searching for breweries…';
+    venues = await nearbyBreweries(origin);
+    if (venues.length === 0) {
+      venueStatus.textContent = 'No breweries found near you. Enter a distance below.';
+      return;
+    }
+    venueSelect.innerHTML =
+      '<option value="">Pick a brewery</option>' +
+      venues
+        .map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.name)}, ${escapeHtml(v.city)} (${fmt(v.crowMiles, 1)} mi away)</option>`)
+        .join('');
+    venueSelect.disabled = false;
+    venueStatus.textContent = `${venues.length} breweries found. Distances shown are straight-line.`;
+  } catch (err) {
+    venueStatus.textContent = (err as Error).message;
+  } finally {
+    nearMe.disabled = false;
+  }
+}
+
+async function routeToVenue(): Promise<void> {
+  const venue = venues.find(v => v.id === venueSelect.value);
+  if (!venue || !origin) return;
+  const request = ++routeRequest;
+  venueStatus.textContent = `Routing to ${venue.name}…`;
+  const route = await bikeRouteMiles(origin, venue);
+  if (request !== routeRequest) return; // a newer selection superseded this one
+  distanceInput.value = route.miles.toFixed(1);
+  venueStatus.textContent = route.estimated
+    ? `Bike routing is unavailable, so ${fmt(route.miles, 1)} mi is an estimate from straight-line distance.`
+    : `${fmt(route.miles, 1)} mi by bike route to ${venue.name}.`;
+  render();
+}
+
+nearMe.addEventListener('click', findNearby);
+venueSelect.addEventListener('change', routeToVenue);
 form.addEventListener('input', render);
 (document.getElementById('build') as HTMLElement).textContent = __BUILD_INFO__;
 render();
