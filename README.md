@@ -70,4 +70,9 @@ If the counted miles burn less than the beer contains, `detourMiles` is the shor
 npm install
 npm test        # Jest via ts-jest
 npm run build   # emits dist/
+npm run build:site  # bundles the dev web UI into site/
 ```
+
+## Dev site
+
+`web/` holds a minimal static page that runs the engine in the browser. `.github/workflows/pages.yml` typechecks, tests and builds it on every PR, and deploys it to GitHub Pages on each push to `main` (or a manual run). Pages must be enabled once under Settings → Pages → Source: GitHub Actions.

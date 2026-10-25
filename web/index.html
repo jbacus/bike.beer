@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Burn &amp; Brew</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Burn &amp; Brew</h1>
+      <p class="sub">How far you need to ride to burn off the beer. Dev build of the bike.beer engine.</p>
+    </header>
+
+    <form id="form" autocomplete="off">
+      <fieldset>
+        <legend>Beer</legend>
+        <label>Name <input name="name" value="Maharaja"></label>
+        <label>Style
+          <input name="style" list="styles" value="IPA - Imperial / Double">
+          <datalist id="styles">
+            <option value="IPA - American">
+            <option value="IPA - Imperial / Double">
+            <option value="IPA - New England / Hazy">
+            <option value="Pale Ale - American">
+            <option value="Lager - Helles">
+            <option value="Pilsner - German">
+            <option value="Light Lager">
+            <option value="Stout - Imperial / Double">
+            <option value="Stout - Pastry">
+            <option value="Porter - American">
+            <option value="Sour - Fruited Gose">
+            <option value="Belgian Tripel">
+            <option value="Barleywine - American">
+            <option value="Wheat Beer - Hefeweizen">
+          </datalist>
+          <small id="carbHint"></small>
+        </label>
+        <div class="row">
+          <label>ABV % <input name="abv" type="number" step="0.1" min="0" max="70" value="10.2"></label>
+          <label>Serving (oz) <input name="servingOz" type="number" step="0.5" min="1" value="16"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Ride</legend>
+        <div class="row">
+          <label>Distance to venue (mi) <input name="directMiles" type="number" step="0.1" min="0" value="6.2"></label>
+          <label>Counts toward burn
+            <select name="tripMode">
+              <option value="outbound">Ride there only</option>
+              <option value="roundTrip">There and back</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>Rider weight (lb) <input name="weightLbs" type="number" step="1" min="50" max="500" value="160"></label>
+          <label>Avg speed (mph) <input name="speedMph" type="number" step="0.5" min="3" max="30" value="14"></label>
+        </div>
+      </fieldset>
+    </form>
+
+    <section id="result" aria-live="polite"></section>
+
+    <footer>
+      <p>Flat ground, still air, style-typical carbs. Estimates, not lab data. A 16 oz pint at 10% ABV is about 2.7 standard drinks: plan the ride home accordingly.</p>
+      <p id="build"></p>
+    </footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
