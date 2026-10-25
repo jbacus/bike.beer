@@ -22,12 +22,21 @@ export interface Beer {
  */
 export type TripMode = 'outbound' | 'roundTrip';
 
+/** Elevation change along the outbound route to the venue. */
+export interface RouteElevation {
+  gainFeet: number;
+  lossFeet: number;
+}
+
 export interface BurnPlan {
   beerCalories: number;
   caloriesPerMile: number;
   /** Miles counted toward the burn with no detour (direct distance, doubled for round trips). */
   countedMiles: number;
+  /** Calories for the direct ride, flat-ground burn plus climbing. */
   directBurn: number;
+  /** Climbing share of directBurn. The ride home climbs what the ride out descended. */
+  climbBurn: number;
   /** Positive when the direct ride burns more than the beer contains. */
   netCalorieBalance: number;
   isCoveredByDirectRide: boolean;

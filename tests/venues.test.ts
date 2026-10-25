@@ -46,6 +46,13 @@ describe('bikeRouteMiles', () => {
     });
   });
 
+  it('returns the route geometry as lat/lon points', async () => {
+    const fetchFn = async () =>
+      jsonResponse({ code: 'Ok', routes: [{ distance: 1000, geometry: { coordinates: [[-122.6, 45.5], [-122.5, 45.6]] } }] });
+    const result = await bikeRouteMiles(portland, seattle, fetchFn as typeof fetch);
+    expect(result.path).toEqual([{ lat: 45.5, lon: -122.6 }, { lat: 45.6, lon: -122.5 }]);
+  });
+
   it('falls back to a scaled straight-line estimate when routing fails', async () => {
     const fetchFn = async () => {
       throw new TypeError('Failed to fetch');

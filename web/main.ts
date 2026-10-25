@@ -1,4 +1,5 @@
-import { carbGramsPerOz, planBurn, TripMode } from '../src';
+import { carbGramsPerOz, planBurn, RouteElevation, TripMode } from '../src';
+import { routeElevation } from './elevation';
 import { bikeRouteMiles, LatLon, nearbyBreweries, Venue } from './venues';
 
 declare const __BUILD_INFO__: string;
@@ -6,6 +7,9 @@ declare const __BUILD_INFO__: string;
 const form = document.getElementById('form') as HTMLFormElement;
 const result = document.getElementById('result') as HTMLElement;
 const carbHint = document.getElementById('carbHint') as HTMLElement;
+
+/** Climb and descent of the routed venue; null when the distance was typed or the lookup failed. */
+let elevation: RouteElevation | null = null;
 
 const fmt = (n: number, digits = 0) =>
   n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -27,6 +31,7 @@ function render(): void {
       num('directMiles'),
       { weightLbs: num('weightLbs'), speedMph: num('speedMph') },
       str('tripMode') as TripMode,
+      elevation ?? undefined,
     );
     const name = escapeHtml(str('name') || 'This beer');
     const verdict = plan.isCoveredByDirectRide
@@ -39,6 +44,11 @@ function render(): void {
         <div><dt>Beer</dt><dd>${fmt(plan.beerCalories)} kcal</dd></div>
         <div><dt>Burn rate</dt><dd>${fmt(plan.caloriesPerMile, 1)} kcal/mi</dd></div>
         <div><dt>Direct ride burn</dt><dd>${fmt(plan.directBurn)} kcal over ${fmt(plan.countedMiles, 1)} mi</dd></div>
+        <div class="wide"><dt>Climbing</dt><dd>${
+          elevation
+            ? `${fmt(plan.climbBurn)} kcal · ↑${fmt(elevation.gainFeet)} ft ↓${fmt(elevation.lossFeet)} ft out`
+            : 'Flat (no route)'
+        }</dd></div>
         <div><dt>Total ride</dt><dd>${fmt(plan.totalMiles, 1)} mi</dd></div>
       </dl>`;
   } catch (err) {
@@ -97,13 +107,48 @@ async function routeToVenue(): Promise<void> {
   const request = ++routeRequest;
   venueStatus.textContent = `Routing to ${venue.name}…`;
   const route = await bikeRouteMiles(origin, venue);
+  const climb = route.path ? await routeElevation(route.path) : null;
   if (request !== routeRequest) return; // a newer selection superseded this one
   distanceInput.value = route.miles.toFixed(1);
+  elevation = climb;
   venueStatus.textContent = route.estimated
-    ? `Bike routing is unavailable, so ${fmt(route.miles, 1)} mi is an estimate from straight-line distance.`
-    : `${fmt(route.miles, 1)} mi by bike route to ${venue.name}.`;
+    ? `Bike routing is unavailable, so ${fmt(route.miles, 1)} mi is an estimate from straight-line distance. Treated as flat.`
+    : `${fmt(route.miles, 1)} mi by bike route to ${venue.name}.` +
+      (climb ? '' : ' Elevation is unavailable, so the route is treated as flat.');
   render();
 }
+
+// A typed distance no longer matches the routed venue, so its elevation no longer applies.
+distanceInput.addEventListener('input', () => {
+  routeRequest++;
+  elevation = null;
+  venueSelect.value = '';
+  venueStatus.textContent = '';
+});
+
+// Remember the rider between visits. Storage can be unavailable (private mode), which is fine.
+const RIDER_KEY = 'bikebeer.rider';
+const riderFields = ['weightLbs', 'speedMph'] as const;
+try {
+  const saved = JSON.parse(localStorage.getItem(RIDER_KEY) ?? '{}') as Record<string, unknown>;
+  for (const f of riderFields) {
+    if (typeof saved[f] === 'number') (form.elements.namedItem(f) as HTMLInputElement).value = String(saved[f]);
+  }
+} catch {
+  /* ignore */
+}
+form.addEventListener('input', e => {
+  const name = (e.target as HTMLInputElement).name;
+  if (!(riderFields as readonly string[]).includes(name)) return;
+  const values = Object.fromEntries(
+    riderFields.map(f => [f, parseFloat((form.elements.namedItem(f) as HTMLInputElement).value)]),
+  );
+  try {
+    localStorage.setItem(RIDER_KEY, JSON.stringify(values));
+  } catch {
+    /* ignore */
+  }
+});
 
 nearMe.addEventListener('click', findNearby);
 venueSelect.addEventListener('change', routeToVenue);
