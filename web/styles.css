@@ -76,4 +76,4 @@ button {
   cursor: pointer;
 }
 button:disabled, select:disabled { opacity: 0.6; cursor: default; }
-footer a { color: inherit; }
+footer a, small a { color: inherit; }

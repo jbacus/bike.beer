@@ -83,17 +83,19 @@ npm run build:site  # bundles the dev web UI into site/
 
 "Find breweries near me" uses the browser's location, then one of two provider sets:
 
-- **Google Maps Platform** (when the `GOOGLE_MAPS_API_KEY` repository variable is set): Places API (New) Text Search for breweries and Routes API `BICYCLE` routes (`web/google.ts`).
+- **Google Maps Platform** (when the `GOOGLE_MAPS_API_KEY` repository variable is set): Places API (New) Text Search for breweries, Routes API `BICYCLE` routes (`web/google.ts`), and elevation along the route from the Maps JavaScript API `ElevationService` (`web/googleElevation.ts`; Google's Elevation web service does not allow browser calls).
 - **Keyless fallback**: [Open Brewery DB](https://www.openbrewerydb.org/) and the [FOSSGIS OSRM](https://routing.openstreetmap.de/) bike router (`web/venues.ts`). The FOSSGIS router is a shared community server with a fair-use policy.
 
-If routing fails, the distance falls back to straight-line × 1.3 and the page says so. Picking a venue also samples up to 100 points along the route and looks up their elevation from the [Open-Meteo](https://open-meteo.com/) elevation API, counting only changes of 3 m or more to filter out terrain-model noise. Rider weight and speed are remembered in the browser's localStorage.
+If routing fails, the distance falls back to straight-line × 1.3 and the page says so. Picking a venue also samples 100 points along the route and looks up their elevation, from Google when keyed and otherwise (or if Google fails) from the [Open-Meteo](https://open-meteo.com/) elevation API. Only changes of 3 m or more count, to filter out terrain-model noise.
+
+Vision Quest Brewing (Boulder, CO) is a featured venue with its tap list copied into `web/featured.ts` (dated; source linked in the file). Picking a tap fills in the beer. The venue's coordinates are looked up at runtime, from Google Places or Open Brewery DB. Rider weight and speed are remembered in the browser's localStorage.
 
 ### Google Maps key
 
 The key is compiled into the public page, so it is a browser key, not a secret. In Google Cloud:
 
-1. Enable **Places API (New)** and **Routes API** on a project with billing.
-2. Create an API key. Under *Application restrictions* choose **Websites** and add `https://jbacus.github.io/bike.beer/*`. Under *API restrictions* allow only those two APIs.
+1. Enable **Places API (New)**, **Routes API**, **Maps JavaScript API** and **Elevation API** on a project with billing.
+2. Create an API key. Under *Application restrictions* choose **Websites** and add `https://jbacus.github.io/bike.beer/*`. Under *API restrictions* allow only those four APIs.
 3. In this repo, add it under Settings → Secrets and variables → Actions → **Variables** as `GOOGLE_MAPS_API_KEY`, then re-run the Pages workflow.
 
 For a local build, run `GOOGLE_MAPS_API_KEY=... npm run build:site`. The referrer restriction blocks localhost unless `http://localhost/*` is also allowed.

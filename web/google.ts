@@ -65,6 +65,23 @@ export async function googleNearbyBreweries(
     .slice(0, limit);
 }
 
+/** Coordinates of the best Places match for a name-and-address query, or null. */
+export async function googleFindPlace(query: string, apiKey: string, fetchFn: Fetch = fetch): Promise<LatLon | null> {
+  try {
+    const res = await fetchFn(PLACES_SEARCH, {
+      method: 'POST',
+      headers: googleHeaders(apiKey, 'places.location'),
+      body: JSON.stringify({ textQuery: query, pageSize: 1 }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const loc = ((await res.json()) as { places?: PlaceRecord[] }).places?.[0]?.location;
+    return Number.isFinite(loc?.latitude) && Number.isFinite(loc?.longitude) ? { lat: loc!.latitude!, lon: loc!.longitude! } : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Cycling route from `from` to `to`, falling back to a straight-line estimate if routing fails. */
 export async function googleBikeRoute(
   from: LatLon,
