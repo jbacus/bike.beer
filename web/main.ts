@@ -1,8 +1,19 @@
 import { carbGramsPerOz, planBurn, RouteElevation, TripMode } from '../src';
 import { routeElevation } from './elevation';
+import { googleBikeRoute, googleNearbyBreweries } from './google';
 import { bikeRouteMiles, LatLon, nearbyBreweries, Venue } from './venues';
 
 declare const __BUILD_INFO__: string;
+/** Browser key for Google Maps Platform, injected at build time; empty means use the keyless providers. */
+declare const __GOOGLE_MAPS_API_KEY__: string;
+
+const GOOGLE_KEY = __GOOGLE_MAPS_API_KEY__;
+const findBreweries = GOOGLE_KEY
+  ? (from: LatLon) => googleNearbyBreweries(from, GOOGLE_KEY)
+  : (from: LatLon) => nearbyBreweries(from);
+const routeBetween = GOOGLE_KEY
+  ? (from: LatLon, to: LatLon) => googleBikeRoute(from, to, GOOGLE_KEY)
+  : (from: LatLon, to: LatLon) => bikeRouteMiles(from, to);
 
 const form = document.getElementById('form') as HTMLFormElement;
 const result = document.getElementById('result') as HTMLElement;
@@ -82,7 +93,7 @@ async function findNearby(): Promise<void> {
   try {
     origin = await currentPosition();
     venueStatus.textContent = 'Searching for breweries…';
-    venues = await nearbyBreweries(origin);
+    venues = await findBreweries(origin);
     if (venues.length === 0) {
       venueStatus.textContent = 'No breweries found near you. Enter a distance below.';
       return;
@@ -106,7 +117,7 @@ async function routeToVenue(): Promise<void> {
   if (!venue || !origin) return;
   const request = ++routeRequest;
   venueStatus.textContent = `Routing to ${venue.name}…`;
-  const route = await bikeRouteMiles(origin, venue);
+  const route = await routeBetween(origin, venue);
   const climb = route.path ? await routeElevation(route.path) : null;
   if (request !== routeRequest) return; // a newer selection superseded this one
   distanceInput.value = route.miles.toFixed(1);
@@ -154,4 +165,5 @@ nearMe.addEventListener('click', findNearby);
 venueSelect.addEventListener('change', routeToVenue);
 form.addEventListener('input', render);
 (document.getElementById('build') as HTMLElement).textContent = __BUILD_INFO__;
+(document.getElementById(GOOGLE_KEY ? 'creditsOpen' : 'creditsGoogle') as HTMLElement).hidden = true;
 render();

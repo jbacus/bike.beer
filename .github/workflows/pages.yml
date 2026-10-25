@@ -26,6 +26,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build:site
+        env:
+          # Repository variable (not a secret): the key ships in the page, so it is public anyway.
+          GOOGLE_MAPS_API_KEY: ${{ vars.GOOGLE_MAPS_API_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
