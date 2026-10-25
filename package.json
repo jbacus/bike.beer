@@ -10,13 +10,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc -p web/tsconfig.json",
+    "build:site": "node scripts/build-site.mjs"
   },
   "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^20.19.43",
+    "esbuild": "^0.25.10",
     "jest": "^29.7.0",
     "ts-jest": "^29.4.15",
     "typescript": "^5.9.3"
