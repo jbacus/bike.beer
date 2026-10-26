@@ -15,8 +15,12 @@ await build({
   minify: true,
   target: 'es2020',
   outfile: `${outdir}/app.js`,
-  define: { __BUILD_INFO__: JSON.stringify(buildInfo) },
+  define: {
+    __BUILD_INFO__: JSON.stringify(buildInfo),
+    // A browser key, public by design once shipped; restrict it by referrer and API in Google Cloud.
+    __GOOGLE_MAPS_API_KEY__: JSON.stringify(process.env.GOOGLE_MAPS_API_KEY ?? ''),
+  },
 });
 
 for (const f of ['index.html', 'styles.css']) cpSync(`web/${f}`, `${outdir}/${f}`);
-console.log(`Built ${outdir}/ (${buildInfo})`);
+console.log(`Built ${outdir}/ (${buildInfo}; maps: ${process.env.GOOGLE_MAPS_API_KEY ? 'Google' : 'keyless'})`);

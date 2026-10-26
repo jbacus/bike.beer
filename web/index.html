@@ -16,6 +16,10 @@
     <form id="form" autocomplete="off">
       <fieldset>
         <legend>Beer</legend>
+        <label>From a tap list
+          <select id="tap"><option value="">Enter a beer by hand</option></select>
+          <small id="tapHint"></small>
+        </label>
         <label>Name <input name="name" value="Maharaja"></label>
         <label>Style
           <input name="style" list="styles" value="IPA - Imperial / Double">
@@ -48,7 +52,7 @@
         <div class="venue">
           <button type="button" id="nearMe">Find breweries near me</button>
           <label>Venue
-            <select id="venue" disabled><option value="">Search near you, or enter a distance below</option></select>
+            <select id="venue"><option value="">Pick a venue, or enter a distance below</option></select>
           </label>
           <small id="venueStatus"></small>
         </div>
@@ -71,8 +75,9 @@
     <section id="result" aria-live="polite"></section>
 
     <footer>
-      <p>Flat ground, still air, style-typical carbs. Estimates, not lab data. A 16 oz pint at 10% ABV is about 2.7 standard drinks: plan the ride home accordingly.</p>
-      <p>Breweries from <a href="https://www.openbrewerydb.org/">Open Brewery DB</a>. Bike routes from the <a href="https://routing.openstreetmap.de/">FOSSGIS OSRM</a> router, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.</p>
+      <p>Still air, style-typical carbs, detour loops assumed flat. Estimates, not lab data. A 16 oz pint at 10% ABV is about 2.7 standard drinks: plan the ride home accordingly.</p>
+      <p id="creditsGoogle">Breweries, bike routes and elevation by Google Maps.</p>
+      <p id="creditsOpen">Breweries from <a href="https://www.openbrewerydb.org/">Open Brewery DB</a>. Bike routes from the <a href="https://routing.openstreetmap.de/">FOSSGIS OSRM</a> router, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors. Elevation from <a href="https://open-meteo.com/">Open-Meteo</a> (Copernicus DEM).</p>
       <p id="build"></p>
     </footer>
   </main>

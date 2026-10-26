@@ -23,6 +23,8 @@ export interface RouteResult {
   miles: number;
   /** True when routing failed and `miles` is the straight-line estimate. */
   estimated: boolean;
+  /** Route geometry from start to venue; absent for an estimate. */
+  path?: LatLon[];
 }
 
 const BREWERY_API = 'https://api.openbrewerydb.org/v1/breweries';
@@ -80,14 +82,18 @@ export async function nearbyBreweries(from: LatLon, limit = 15, fetchFn: Fetch =
 
 /** Cycling distance from `from` to `to`, falling back to a straight-line estimate if routing fails. */
 export async function bikeRouteMiles(from: LatLon, to: LatLon, fetchFn: Fetch = fetch): Promise<RouteResult> {
-  const url = `${BIKE_ROUTER}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
+  const url = `${BIKE_ROUTER}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`;
   try {
     const res = await fetchFn(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
     if (res.ok) {
-      const body = (await res.json()) as { code?: string; routes?: Array<{ distance: number }> };
-      const meters = body.routes?.[0]?.distance;
-      if (body.code === 'Ok' && typeof meters === 'number') {
-        return { miles: meters / METERS_PER_MILE, estimated: false };
+      const body = (await res.json()) as {
+        code?: string;
+        routes?: Array<{ distance: number; geometry?: { coordinates?: Array<[number, number]> } }>;
+      };
+      const route = body.routes?.[0];
+      if (body.code === 'Ok' && typeof route?.distance === 'number') {
+        const path = route.geometry?.coordinates?.map(([lon, lat]) => ({ lat, lon }));
+        return { miles: route.distance / METERS_PER_MILE, estimated: false, path };
       }
     }
   } catch {
